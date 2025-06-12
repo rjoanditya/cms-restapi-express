@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model attachments {
+  id               String             @id @db.Char(36)
+  name             String             @db.Text
+  slug             String             @unique(map: "attachments_slug_unique") @db.VarChar(255)
+  url              String?            @db.VarChar(255)
+  created_at       DateTime?          @db.Timestamp(0)
+  updated_at       DateTime?          @db.Timestamp(0)
+  post_attachments post_attachments[]
+  posts            posts[]
+}
+
+model cache {
+  key        String @id @db.VarChar(255)
+  value      String @db.MediumText
+  expiration Int
+}
+
+model cache_locks {
+  key        String @id @db.VarChar(255)
+  owner      String @db.VarChar(255)
+  expiration Int
+}
+
+model failed_jobs {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.LongText
+  exception  String   @db.LongText
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model images {
+  id          String     @id @db.Char(36)
+  name        String     @db.Text
+  slug        String     @unique(map: "images_slug_unique") @db.VarChar(255)
+  description String?    @db.Text
+  url         String     @db.VarChar(255)
+  created_at  DateTime?  @db.Timestamp(0)
+  updated_at  DateTime?  @db.Timestamp(0)
+  posts       posts[]
+  profiles    profiles[]
+}
+
+model job_batches {
+  id             String  @id @db.VarChar(255)
+  name           String  @db.VarChar(255)
+  total_jobs     Int
+  pending_jobs   Int
+  failed_jobs    Int
+  failed_job_ids String  @db.LongText
+  options        String? @db.MediumText
+  cancelled_at   Int?
+  created_at     Int
+  finished_at    Int?
+}
+
+model jobs {
+  id           BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  queue        String @db.VarChar(255)
+  payload      String @db.LongText
+  attempts     Int    @db.UnsignedTinyInt
+  reserved_at  Int?   @db.UnsignedInt
+  available_at Int    @db.UnsignedInt
+  created_at   Int    @db.UnsignedInt
+
+  @@index([queue], map: "jobs_queue_index")
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement()) @db.UnsignedInt
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model organizations {
+  id          String     @id @db.Char(36)
+  code        String     @unique(map: "organizations_code_unique") @db.VarChar(255)
+  name        String     @db.VarChar(255)
+  description String?    @db.Text
+  created_at  DateTime?  @db.Timestamp(0)
+  updated_at  DateTime?  @db.Timestamp(0)
+  profiles    profiles[]
+}
+
+model password_reset_tokens {
+  email      String    @id @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+}
+
+model post_attachments {
+  post_id       String      @db.Char(36)
+  attachment_id String      @db.Char(36)
+  attachments   attachments @relation(fields: [attachment_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "post_attachments_attachment_id_foreign")
+  posts         posts       @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "post_attachments_post_id_foreign")
+
+  @@id([post_id, attachment_id])
+  @@index([attachment_id], map: "post_attachments_attachment_id_foreign")
+}
+
+model post_term_relationship {
+  post_id         String          @db.Char(36)
+  taxonomy_id     String          @db.Char(36)
+  posts           posts           @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "post_term_relationship_post_id_foreign")
+  term_taxonomies term_taxonomies @relation(fields: [taxonomy_id], references: [id], onUpdate: Restrict, map: "post_term_relationship_taxonomy_id_foreign")
+
+  @@id([post_id, taxonomy_id])
+  @@index([taxonomy_id], map: "post_term_relationship_taxonomy_id_foreign")
+}
+
+model posts {
+  id                     String                   @id @db.Char(36)
+  user_id                String                   @db.Char(36)
+  title                  String                   @db.Text
+  slug                   String                   @unique(map: "posts_slug_unique") @db.VarChar(255)
+  content                String                   @db.LongText
+  status                 posts_status             @default(draft)
+  image_id               String?                  @db.Char(36)
+  type_id                String                   @db.Char(36)
+  attachment_id          String?                  @db.Char(36)
+  views                  BigInt                   @default(0)
+  published_at           DateTime?                @db.Timestamp(0)
+  created_at             DateTime?                @db.Timestamp(0)
+  updated_at             DateTime?                @db.Timestamp(0)
+  deleted_at             DateTime?                @db.Timestamp(0)
+  post_attachments       post_attachments[]
+  post_term_relationship post_term_relationship[]
+  attachments            attachments?             @relation(fields: [attachment_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "posts_attachment_id_foreign")
+  images                 images?                  @relation(fields: [image_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "posts_image_id_foreign")
+  types                  types                    @relation(fields: [type_id], references: [id], onUpdate: Restrict, map: "posts_type_id_foreign")
+  users                  users                    @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "posts_user_id_foreign")
+  postsmeta              postsmeta[]
+
+  @@index([published_at], map: "index_posts_published_at")
+  @@index([status], map: "index_posts_status")
+  @@index([attachment_id], map: "posts_attachment_id_foreign")
+  @@index([image_id], map: "posts_image_id_foreign")
+  @@index([type_id], map: "posts_type_id_foreign")
+  @@index([user_id], map: "posts_user_id_foreign")
+}
+
+model postsmeta {
+  id         String    @id @db.Char(36)
+  post_id    String    @db.Char(36)
+  meta_key   String    @db.VarChar(255)
+  meta_value String?   @db.LongText
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  posts      posts     @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "postsmeta_post_id_foreign")
+
+  @@index([post_id], map: "postsmeta_post_id_foreign")
+}
+
+model profiles {
+  id              String         @id @db.Char(36)
+  user_id         String         @db.Char(36)
+  name            String         @db.VarChar(255)
+  image_id        String?        @db.Char(36)
+  role_id         String         @db.Char(36)
+  organization_id String?        @db.Char(36)
+  created_at      DateTime?      @db.Timestamp(0)
+  updated_at      DateTime?      @db.Timestamp(0)
+  images          images?        @relation(fields: [image_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "profiles_image_id_foreign")
+  organizations   organizations? @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "profiles_organization_id_foreign")
+  roles           roles          @relation(fields: [role_id], references: [id], onUpdate: Restrict, map: "profiles_role_id_foreign")
+  users           users          @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "profiles_user_id_foreign")
+
+  @@index([image_id], map: "profiles_image_id_foreign")
+  @@index([organization_id], map: "profiles_organization_id_foreign")
+  @@index([role_id], map: "profiles_role_id_foreign")
+  @@index([user_id], map: "profiles_user_id_foreign")
+}
+
+model roles {
+  id          String     @id @db.Char(36)
+  name        String     @db.VarChar(255)
+  description String?    @db.Text
+  created_at  DateTime?  @db.Timestamp(0)
+  updated_at  DateTime?  @db.Timestamp(0)
+  profiles    profiles[]
+}
+
+model sessions {
+  id            String  @id @db.VarChar(255)
+  user_id       String? @db.Char(36)
+  ip_address    String? @db.VarChar(45)
+  user_agent    String? @db.Text
+  payload       String  @db.LongText
+  last_activity Int
+
+  @@index([last_activity], map: "sessions_last_activity_index")
+  @@index([user_id], map: "sessions_user_id_index")
+}
+
+model term_taxonomies {
+  id                     String                   @id @db.Char(36)
+  term_id                String                   @db.Char(36)
+  taxonomy               String                   @db.VarChar(255)
+  description            String?                  @db.Text
+  parent                 String?                  @db.Char(36)
+  count                  Int                      @default(0) @db.UnsignedInt
+  created_at             DateTime?                @db.Timestamp(0)
+  updated_at             DateTime?                @db.Timestamp(0)
+  post_term_relationship post_term_relationship[]
+  terms                  terms                    @relation(fields: [term_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "term_taxonomies_term_id_foreign")
+
+  @@index([term_id], map: "term_taxonomies_term_id_foreign")
+}
+
+model terms {
+  id              String            @id @db.Char(36)
+  name            String            @db.VarChar(255)
+  slug            String            @unique(map: "terms_slug_unique") @db.VarChar(255)
+  created_at      DateTime?         @db.Timestamp(0)
+  updated_at      DateTime?         @db.Timestamp(0)
+  term_taxonomies term_taxonomies[]
+}
+
+model types {
+  id         String    @id @db.Char(36)
+  name       String    @db.VarChar(255)
+  slug       String    @unique(map: "types_slug_unique") @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  posts      posts[]
+}
+
+model users {
+  id                String     @id @db.Char(36)
+  username          String     @unique(map: "users_username_unique") @db.VarChar(255)
+  email             String     @unique(map: "users_email_unique") @db.VarChar(255)
+  email_verified_at DateTime?  @db.Timestamp(0)
+  password          String     @db.VarChar(255)
+  remember_token    String?    @db.VarChar(100)
+  created_at        DateTime?  @db.Timestamp(0)
+  updated_at        DateTime?  @db.Timestamp(0)
+  posts             posts[]
+  profiles          profiles[]
+}
+
+enum posts_status {
+  draft
+  publish
+  archived
+}
