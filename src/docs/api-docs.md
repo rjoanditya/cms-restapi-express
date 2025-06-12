@@ -1,5 +1,35 @@
 # API Documentation
-lorem ipsum
+<span style="
+  display: inline-block;
+  background-color: rgba(0, 255, 231, 0.1);
+  color: #00ffe7;
+  border: 1px solid #00ffe7;
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+  font-family: sans-serif;
+  margin-top: 1rem;
+">
+  Author: Rizky Joanditya Nur Iman &copy; 2025
+</span>
+<span style="
+  display: inline-block;
+  background-color: rgba(0, 255, 231, 0.1);
+  color: #00ffe7;
+  border: 1px solid #00ffe7;
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+  font-family: sans-serif;
+  margin-top: 1rem;
+">
+    Latest Updated : 12 Juni 2025
+</span>
+
+<br>
+
+REST API ini dirancang untuk mengelola konten dalam CMS (Content Management System) aplikasi **https://sukoharjokab.go.id**. API ini menyediakan berbagai endpoint untuk membuat, membaca, memperbarui, dan menghapus data seperti artikel, kategori, media, dan pengaturan situs. Setiap endpoint mengikuti standar RESTful dan dilindungi menggunakan otentikasi token.
+
 
 # Base URL
 
